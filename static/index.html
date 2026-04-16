@@ -104,20 +104,22 @@
       display: flex;
       gap: 12px;
       align-items: center;
-      margin-bottom: 14px;
+      margin-bottom: 10px;
       flex-wrap: wrap;
     }
     .meta-title { font-weight: 600; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .meta-sub {
+    .meta-info {
       display: flex;
-      gap: 12px;
-      align-items: center;
+      flex-direction: column;
+      gap: 4px;
       margin-bottom: 14px;
       font-size: 13px;
       color: var(--text-muted);
+      border-left: 2px solid var(--border);
+      padding-left: 10px;
     }
-    .meta-sub a { color: var(--accent); text-decoration: none; }
-    .meta-sub a:hover { text-decoration: underline; }
+    .meta-info a { color: var(--accent); text-decoration: none; word-break: break-all; }
+    .meta-info a:hover { text-decoration: underline; }
     .badge {
       font-size: 11px;
       font-weight: 600;
@@ -247,9 +249,9 @@
       <span class="badge" id="lang-badge"></span>
       <span class="badge badge-translated" id="translated-badge" style="display:none">翻訳済み</span>
     </div>
-    <div class="meta-sub">
-      <span id="channel-name"></span>
-      <a id="video-url" href="#" target="_blank" rel="noopener noreferrer"></a>
+    <div class="meta-info">
+      <span id="meta-channel"></span>
+      <a id="meta-url" href="#" target="_blank" rel="noopener noreferrer"></a>
     </div>
     <div class="toolbar">
       <button class="secondary" onclick="copyText()">テキストをコピー</button>
@@ -301,12 +303,11 @@ async function fetchSubtitles() {
 function renderResult(data) {
   document.getElementById("title").textContent = data.title;
 
-  const channelEl = document.getElementById("channel-name");
-  channelEl.textContent = data.channel || "";
+  document.getElementById("meta-channel").textContent = "チャンネル: " + (data.channel || "");
 
-  const urlEl = document.getElementById("video-url");
+  const urlEl = document.getElementById("meta-url");
   urlEl.href = data.url;
-  urlEl.textContent = data.url;
+  urlEl.textContent = "URL: " + data.url;
 
   const langBadge = document.getElementById("lang-badge");
   if (data.lang === "ja") {
@@ -331,25 +332,23 @@ function escapeHtml(s) {
   return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 }
 
-function getPlainText() {
-  if (!currentData) return "";
-  return currentData.formatted;
-}
-
-function copyText() {
-  navigator.clipboard.writeText(getPlainText());
-}
-
-function downloadTxt() {
-  const header = [
+function getMetaHeader() {
+  return [
     "タイトル: " + currentData.title,
-    "チャンネル: " + currentData.channel,
     "URL: " + currentData.url,
+    "チャンネル: " + currentData.channel,
     "",
     "---",
     "",
   ].join("\n");
-  const blob = new Blob([header + getPlainText()], { type: "text/plain;charset=utf-8" });
+}
+
+function copyText() {
+  navigator.clipboard.writeText(getMetaHeader() + currentData.formatted);
+}
+
+function downloadTxt() {
+  const blob = new Blob([getMetaHeader() + currentData.formatted], { type: "text/plain;charset=utf-8" });
   triggerDownload(blob, sanitizeFilename(currentData.title) + ".txt");
 }
 
