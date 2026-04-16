@@ -59,11 +59,11 @@ def deduplicate(texts: list[str]) -> list[str]:
 
 def format_as_text(texts: list[str]) -> str:
     """字幕断片を自然な文章に整形する。
-    全断片を結合し、文末（。！？.!?）で改行を入れる。
+    全断片を結合し、文末（。！？.!?」）で改行を入れる。
     """
     joined = "".join(texts)
     # 文末記号の後に改行を入れる
-    formatted = re.sub(r"([。！？!?])", r"\1\n", joined)
+    formatted = re.sub(r"([。！？!?.」])", r"\1\n", joined)
     # 連続する改行を1つにまとめる
     formatted = re.sub(r"\n+", "\n", formatted).strip()
     return formatted
