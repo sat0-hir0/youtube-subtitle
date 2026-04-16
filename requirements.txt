@@ -8,3 +8,4 @@ ruff
 bandit
 pre-commit
 pytest
+httpx
