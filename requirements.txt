@@ -2,3 +2,7 @@ fastapi
 uvicorn[standard]
 yt-dlp
 deep-translator
+
+# dev
+ruff
+pytest
