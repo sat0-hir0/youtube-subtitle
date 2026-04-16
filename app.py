@@ -3,11 +3,10 @@ import re
 import tempfile
 from pathlib import Path
 
+import yt_dlp
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
-import yt_dlp
 
 app = FastAPI()
 
@@ -64,9 +63,9 @@ def format_as_text(texts: list[str]) -> str:
     """
     joined = "".join(texts)
     # 文末記号の後に改行を入れる
-    formatted = re.sub(r'([。！？!?])', r'\1\n', joined)
+    formatted = re.sub(r"([。！？!?])", r"\1\n", joined)
     # 連続する改行を1つにまとめる
-    formatted = re.sub(r'\n+', '\n', formatted).strip()
+    formatted = re.sub(r"\n+", "\n", formatted).strip()
     return formatted
 
 
@@ -101,7 +100,10 @@ async def get_subtitles(request: SubtitleRequest):
         sub_file, lang, title = download_subtitles(request.url, tmpdir)
 
         if sub_file is None:
-            raise HTTPException(status_code=404, detail="字幕が見つかりませんでした。この動画には字幕がない可能性があります。")
+            raise HTTPException(
+                status_code=404,
+                detail="字幕が見つかりませんでした。この動画には字幕がない可能性があります。",
+            )
 
         content = sub_file.read_text(encoding="utf-8")
         texts = deduplicate(parse_vtt(content))
@@ -128,7 +130,9 @@ async def get_subtitles(request: SubtitleRequest):
             "translated": translated,
             "texts": texts,
             "translated_texts": translated_texts,
-            "formatted": format_as_text(translated_texts if translated and translated_texts else texts),
+            "formatted": format_as_text(
+                translated_texts if translated and translated_texts else texts
+            ),
         }
 
 
@@ -137,4 +141,5 @@ app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run("app:app", host="127.0.0.1", port=8000, reload=True)

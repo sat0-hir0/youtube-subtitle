@@ -1,0 +1,25 @@
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "S",   # flake8-bandit (security)
+    "B",   # flake8-bugbear
+    "I",   # isort
+]
+ignore = [
+    "S101",  # assert文の使用（テストで使用）
+    "S112",  # try-except-continueパターン（yt-dlpの言語フォールバック）
+    "E501",  # 行長制限（日本語文字列を含む行）
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S"]  # テストファイルはsecurityルールを無効化
+
+[tool.bandit]
+exclude_dirs = ["tests"]
+skips = ["B112"]
