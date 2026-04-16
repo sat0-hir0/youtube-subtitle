@@ -43,4 +43,4 @@ docker compose down
 | 字幕取得 | yt-dlp |
 | 翻訳 | deep-translator (Google Translate) |
 | フロントエンド | HTML / CSS / JavaScript (vanilla) |
-| 実行環境 | Docker / WSL2 |
+| 実行環境 | Docker |
