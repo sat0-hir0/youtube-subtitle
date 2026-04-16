@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YouTube 字幕ダウンローダー</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --border: #2e3147;
+      --accent: #5b6cf9;
+      --accent-hover: #7080ff;
+      --text: #e2e4f0;
+      --text-muted: #7880a0;
+      --success: #3ecf8e;
+      --warning: #f5a623;
+      --danger: #e05c5c;
+      --radius: 8px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Segoe UI", system-ui, sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    header h1 { font-size: 16px; font-weight: 600; }
+    header span { font-size: 20px; }
+
+    main { max-width: 960px; margin: 32px auto; padding: 0 24px; }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 10px;
+    }
+    .input-row input {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-size: 14px;
+      padding: 10px 14px;
+      outline: none;
+      transition: border-color .2s;
+    }
+    .input-row input:focus { border-color: var(--accent); }
+    .input-row input::placeholder { color: var(--text-muted); }
+
+    button {
+      background: var(--accent);
+      border: none;
+      border-radius: var(--radius);
+      color: #fff;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      padding: 10px 20px;
+      transition: background .2s;
+      white-space: nowrap;
+    }
+    button:hover { background: var(--accent-hover); }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+    button.secondary {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    button.secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+    .options {
+      margin-top: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+    .options input[type="checkbox"] { accent-color: var(--accent); width: 15px; height: 15px; cursor: pointer; }
+    .options label { cursor: pointer; user-select: none; }
+
+    .meta {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+    .meta-title { font-weight: 600; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+    }
+    .badge-ja { background: #1e3a5f; color: #5ab4ff; }
+    .badge-en { background: #2a1f0a; color: var(--warning); }
+    .badge-translated { background: #0f2e1e; color: var(--success); }
+
+    .toolbar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .subtitle-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      max-height: 520px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    .subtitle-list::-webkit-scrollbar { width: 6px; }
+    .subtitle-list::-webkit-scrollbar-track { background: transparent; }
+    .subtitle-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    .entry {
+      display: grid;
+      grid-template-columns: 110px 1fr 1fr;
+      gap: 10px;
+      align-items: start;
+      padding: 8px 10px;
+      border-radius: 6px;
+      transition: background .15s;
+    }
+    .entry:hover { background: rgba(255,255,255,.03); }
+    .entry.no-translation { grid-template-columns: 110px 1fr; }
+
+    .ts {
+      color: var(--text-muted);
+      font-family: monospace;
+      font-size: 12px;
+      padding-top: 2px;
+    }
+    .original { color: var(--text); }
+    .translation { color: #9ee6c0; }
+
+    .col-header {
+      display: grid;
+      grid-template-columns: 110px 1fr 1fr;
+      gap: 10px;
+      padding: 0 10px 8px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 6px;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+    }
+    .col-header.no-translation { grid-template-columns: 110px 1fr; }
+
+    .status {
+      padding: 12px 14px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      margin-bottom: 16px;
+    }
+    .status.error { background: #2a1010; border: 1px solid #5a2020; color: #ff9090; }
+    .status.loading {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    #result { display: none; }
+    #error  { display: none; }
+    #loading { display: none; }
+  </style>
+</head>
+<body>
+
+<header>
+  <span>🎬</span>
+  <h1>YouTube 字幕ダウンローダー</h1>
+</header>
+
+<main>
+  <div class="card">
+    <div class="input-row">
+      <input id="url" type="text" placeholder="YouTube URL を貼り付け (例: https://www.youtube.com/watch?v=...)" />
+      <button id="btn" onclick="fetchSubtitles()">字幕を取得</button>
+    </div>
+    <div class="options">
+      <input type="checkbox" id="translate" />
+      <label for="translate">英語字幕を日本語に翻訳する（日本語字幕がない場合）</label>
+    </div>
+  </div>
+
+  <div id="loading" class="status loading">
+    <div class="spinner"></div>
+    <span>字幕を取得中です。しばらくお待ちください…</span>
+  </div>
+
+  <div id="error" class="status error"></div>
+
+  <div id="result" class="card">
+    <div class="meta">
+      <span class="meta-title" id="title"></span>
+      <span class="badge" id="lang-badge"></span>
+      <span class="badge badge-translated" id="translated-badge" style="display:none">翻訳済み</span>
+    </div>
+    <div class="toolbar">
+      <button class="secondary" onclick="copyText()">テキストをコピー</button>
+      <button class="secondary" onclick="downloadTxt()">TXT ダウンロード</button>
+    </div>
+    <div id="text-view"></div>
+  </div>
+</main>
+
+<script>
+let currentData = null;
+
+async function fetchSubtitles() {
+  const url = document.getElementById("url").value.trim();
+  if (!url) return;
+
+  const translate = document.getElementById("translate").checked;
+  const btn = document.getElementById("btn");
+
+  btn.disabled = true;
+  document.getElementById("loading").style.display = "flex";
+  document.getElementById("error").style.display = "none";
+  document.getElementById("result").style.display = "none";
+
+  try {
+    const res = await fetch("/api/subtitles", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url, translate }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.detail || "エラーが発生しました");
+    }
+
+    const data = await res.json();
+    currentData = data;
+    renderResult(data);
+  } catch (e) {
+    document.getElementById("error").style.display = "block";
+    document.getElementById("error").textContent = "エラー: " + e.message;
+  } finally {
+    btn.disabled = false;
+    document.getElementById("loading").style.display = "none";
+  }
+}
+
+function renderResult(data) {
+  document.getElementById("title").textContent = data.title;
+
+  const langBadge = document.getElementById("lang-badge");
+  if (data.lang === "ja") {
+    langBadge.textContent = "日本語";
+    langBadge.className = "badge badge-ja";
+  } else {
+    langBadge.textContent = "English";
+    langBadge.className = "badge badge-en";
+  }
+
+  const translatedBadge = document.getElementById("translated-badge");
+  translatedBadge.style.display = data.translated ? "inline-block" : "none";
+
+  // テキスト表示
+  const view = document.getElementById("text-view");
+  view.innerHTML = `<p style="line-height:2;white-space:pre-wrap;">${escapeHtml(data.formatted)}</p>`;
+
+  document.getElementById("result").style.display = "block";
+}
+
+function escapeHtml(s) {
+  return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+function getPlainText() {
+  if (!currentData) return "";
+  return currentData.formatted;
+}
+
+function copyText() {
+  navigator.clipboard.writeText(getPlainText());
+}
+
+function downloadTxt() {
+  const blob = new Blob([getPlainText()], { type: "text/plain;charset=utf-8" });
+  triggerDownload(blob, sanitizeFilename(currentData.title) + ".txt");
+}
+
+function sanitizeFilename(name) {
+  return name.replace(/[\\/:*?"<>|]/g, "_").substring(0, 80);
+}
+
+function triggerDownload(blob, filename) {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+}
+
+document.getElementById("url").addEventListener("keydown", e => {
+  if (e.key === "Enter") fetchSubtitles();
+});
+</script>
+</body>
+</html>
