@@ -78,7 +78,7 @@ def test_parse_vtt_youtube_duplicate_pattern():
 
 
 def test_get_subtitles_not_found(client):
-    with patch("app.download_subtitles", return_value=(None, "", "Unknown")):
+    with patch("app.download_subtitles", return_value=(None, "", "Unknown", "Unknown")):
         response = client.post(
             "/api/subtitles",
             json={"url": "https://www.youtube.com/watch?v=dummy", "translate": False},
@@ -90,7 +90,10 @@ def test_get_subtitles_not_found(client):
 def test_get_subtitles_japanese(tmp_path, client):
     vtt_file = tmp_path / "video.ja.vtt"
     vtt_file.write_text("WEBVTT\n\n00:00:00.000 --> 00:00:02.000\nこんにちは\n", encoding="utf-8")
-    with patch("app.download_subtitles", return_value=(vtt_file, "ja", "テスト動画")):
+    with patch(
+        "app.download_subtitles",
+        return_value=(vtt_file, "ja", "テスト動画", "テストチャンネル"),
+    ):
         response = client.post(
             "/api/subtitles",
             json={"url": "https://www.youtube.com/watch?v=dummy", "translate": False},
@@ -98,6 +101,8 @@ def test_get_subtitles_japanese(tmp_path, client):
     assert response.status_code == 200
     body = response.json()
     assert body["title"] == "テスト動画"
+    assert body["channel"] == "テストチャンネル"
+    assert body["url"] == "https://www.youtube.com/watch?v=dummy"
     assert body["lang"] == "ja"
     assert body["translated"] is False
     assert body["texts"] == ["こんにちは"]
@@ -111,7 +116,9 @@ def test_get_subtitles_english_translated(tmp_path, client):
     mock_translator = MagicMock()
     mock_translator.translate_batch.return_value = ["こんにちは"]
     with (
-        patch("app.download_subtitles", return_value=(vtt_file, "en", "Test Video")),
+        patch(
+            "app.download_subtitles", return_value=(vtt_file, "en", "Test Video", "Test Channel")
+        ),
         patch("deep_translator.GoogleTranslator", return_value=mock_translator),
     ):
         response = client.post(

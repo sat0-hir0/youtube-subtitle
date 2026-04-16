@@ -108,6 +108,16 @@
       flex-wrap: wrap;
     }
     .meta-title { font-weight: 600; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .meta-sub {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 14px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .meta-sub a { color: var(--accent); text-decoration: none; }
+    .meta-sub a:hover { text-decoration: underline; }
     .badge {
       font-size: 11px;
       font-weight: 600;
@@ -237,6 +247,10 @@
       <span class="badge" id="lang-badge"></span>
       <span class="badge badge-translated" id="translated-badge" style="display:none">翻訳済み</span>
     </div>
+    <div class="meta-sub">
+      <span id="channel-name"></span>
+      <a id="video-url" href="#" target="_blank" rel="noopener noreferrer"></a>
+    </div>
     <div class="toolbar">
       <button class="secondary" onclick="copyText()">テキストをコピー</button>
       <button class="secondary" onclick="downloadTxt()">TXT ダウンロード</button>
@@ -287,6 +301,13 @@ async function fetchSubtitles() {
 function renderResult(data) {
   document.getElementById("title").textContent = data.title;
 
+  const channelEl = document.getElementById("channel-name");
+  channelEl.textContent = data.channel || "";
+
+  const urlEl = document.getElementById("video-url");
+  urlEl.href = data.url;
+  urlEl.textContent = data.url;
+
   const langBadge = document.getElementById("lang-badge");
   if (data.lang === "ja") {
     langBadge.textContent = "日本語";
@@ -320,7 +341,15 @@ function copyText() {
 }
 
 function downloadTxt() {
-  const blob = new Blob([getPlainText()], { type: "text/plain;charset=utf-8" });
+  const header = [
+    "タイトル: " + currentData.title,
+    "チャンネル: " + currentData.channel,
+    "URL: " + currentData.url,
+    "",
+    "---",
+    "",
+  ].join("\n");
+  const blob = new Blob([header + getPlainText()], { type: "text/plain;charset=utf-8" });
   triggerDownload(blob, sanitizeFilename(currentData.title) + ".txt");
 }
 

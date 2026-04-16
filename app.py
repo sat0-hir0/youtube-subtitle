@@ -69,9 +69,10 @@ def format_as_text(texts: list[str]) -> str:
     return formatted
 
 
-def download_subtitles(url: str, tmpdir: str) -> tuple[Path | None, str, str]:
-    """字幕をダウンロードし (ファイルパス, 言語, タイトル) を返す"""
+def download_subtitles(url: str, tmpdir: str) -> tuple[Path | None, str, str, str]:
+    """字幕をダウンロードし (ファイルパス, 言語, タイトル, チャンネル名) を返す"""
     title = "Unknown"
+    channel = "Unknown"
     for lang in ["ja", "en"]:
         opts = {
             "writesubtitles": True,
@@ -87,17 +88,18 @@ def download_subtitles(url: str, tmpdir: str) -> tuple[Path | None, str, str]:
             with yt_dlp.YoutubeDL(opts) as ydl:
                 info = ydl.extract_info(url, download=True)
                 title = info.get("title", "Unknown")
+                channel = info.get("channel", info.get("uploader", "Unknown"))
             for f in Path(tmpdir).glob("*.vtt"):
-                return f, lang, title
+                return f, lang, title, channel
         except Exception:
             continue
-    return None, "", title
+    return None, "", title, channel
 
 
 @app.post("/api/subtitles")
 async def get_subtitles(request: SubtitleRequest):
     with tempfile.TemporaryDirectory() as tmpdir:
-        sub_file, lang, title = download_subtitles(request.url, tmpdir)
+        sub_file, lang, title, channel = download_subtitles(request.url, tmpdir)
 
         if sub_file is None:
             raise HTTPException(
@@ -125,7 +127,9 @@ async def get_subtitles(request: SubtitleRequest):
                 translated_texts = []
 
         return {
+            "url": request.url,
             "title": title,
+            "channel": channel,
             "lang": lang,
             "translated": translated,
             "texts": texts,
