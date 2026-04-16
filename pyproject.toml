@@ -23,3 +23,8 @@ ignore = [
 [tool.bandit]
 exclude_dirs = ["tests"]
 skips = ["B112"]
+
+[tool.pytest.ini_options]
+markers = [
+    "integration: 実際にYouTubeへアクセスする結合テスト（--m integration で実行）",
+]
