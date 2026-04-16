@@ -127,6 +127,8 @@ def test_get_subtitles_english_translated(tmp_path, client):
         )
     assert response.status_code == 200
     body = response.json()
+    assert body["url"] == "https://www.youtube.com/watch?v=dummy"
+    assert body["channel"] == "Test Channel"
     assert body["lang"] == "en"
     assert body["translated"] is True
     assert body["texts"] == ["Hello"]
