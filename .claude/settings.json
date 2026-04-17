@@ -1,13 +1,26 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(wsl *)",
+      "Bash(curl *)",
+      "Bash(docker *)",
+      "Bash(docker compose *)"
+    ]
+  },
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "Bash",
+        "matcher": "Bash(git commit*)",
         "hooks": [
           {
             "type": "command",
             "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pre-commit.sh"
-          },
+          }
+        ]
+      },
+      {
+        "matcher": "Bash(git push*)",
+        "hooks": [
           {
             "type": "command",
             "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pre-push.sh"

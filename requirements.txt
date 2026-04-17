@@ -2,10 +2,3 @@ fastapi
 uvicorn[standard]
 yt-dlp
 deep-translator
-
-# dev
-ruff
-bandit
-pre-commit
-pytest
-httpx

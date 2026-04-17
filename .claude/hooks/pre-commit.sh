@@ -1,14 +1,6 @@
 #!/bin/bash
 
-# git commit コマンドの場合のみ実行
-COMMAND=$(jq -r '.tool_input.command // empty' < /dev/stdin)
-
-if ! echo "$COMMAND" | grep -q "git commit"; then
-  exit 0
-fi
-
-PROJECT_DIR="$CLAUDE_PROJECT_DIR"
-cd "$PROJECT_DIR"
+cd "$CLAUDE_PROJECT_DIR"
 
 source ~/.local/bin/env
 
