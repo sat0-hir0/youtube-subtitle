@@ -1,0 +1,6 @@
+-r requirements.txt
+ruff
+bandit
+pre-commit
+pytest
+httpx
