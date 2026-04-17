@@ -96,6 +96,11 @@ def download_subtitles(url: str, tmpdir: str) -> tuple[Path | None, str, str, st
     return None, "", title, channel
 
 
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
+
+
 @app.post("/api/subtitles")
 async def get_subtitles(request: SubtitleRequest):
     with tempfile.TemporaryDirectory() as tmpdir:
