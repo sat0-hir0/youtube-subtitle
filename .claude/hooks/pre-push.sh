@@ -10,7 +10,7 @@ if [ ! -d ".venv" ]; then
 fi
 
 echo "=== pytest ==="
-if ! .venv/bin/pytest; then
+if ! .venv/bin/pytest -q --tb=short; then
   jq -n '{
     "hookSpecificOutput": {
       "hookEventName": "PreToolUse",

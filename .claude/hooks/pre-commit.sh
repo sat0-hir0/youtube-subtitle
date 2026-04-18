@@ -5,7 +5,7 @@ cd "$CLAUDE_PROJECT_DIR"
 source ~/.local/bin/env
 
 echo "=== ruff format ==="
-if ! ruff format .; then
+if ! ruff format --quiet .; then
   jq -n '{
     "hookSpecificOutput": {
       "hookEventName": "PreToolUse",
@@ -17,7 +17,7 @@ if ! ruff format .; then
 fi
 
 echo "=== ruff check ==="
-if ! ruff check .; then
+if ! ruff check --quiet .; then
   jq -n '{
     "hookSpecificOutput": {
       "hookEventName": "PreToolUse",
